@@ -2,6 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
 
 @Controller('/api/users')
 export class UsersController {
@@ -15,5 +16,10 @@ export class UsersController {
   @Post('/login')
   login(@Body() loginDto: LoginDto) {
     return this.usersService.login(loginDto);
+  }
+
+  @Post('/refresh')
+  refresh(@Body() refreshDto: RefreshDto) {
+    return this.usersService.refresh(refreshDto);
   }
 }

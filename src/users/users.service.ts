@@ -13,6 +13,8 @@ import {
   createSuccessResponse,
 } from '../common/types/api-response.type';
 import { JwtService } from '@nestjs/jwt';
+import { RefreshDto } from './dto/refresh.dto';
+import { JwtType } from '../common/types/jwt.type';
 
 @Injectable()
 export class UsersService {
@@ -80,27 +82,43 @@ export class UsersService {
     );
   }
 
+  async refresh(
+    dto: RefreshDto,
+  ): Promise<ApiResponse<{ accessToken: string }>> {
+    const payload = this.jwtService.verify<JwtType>(dto.refreshToken);
+
+    const findUser = await this.usersRepository.findByEmail(payload.email);
+
+    if (findUser == null) {
+      throw new BadRequestException('존재하지 않는 사용자입니다');
+    }
+
+    const newAccessToken = this.#createAccessToken(findUser);
+
+    return createSuccessResponse({
+      accessToken: newAccessToken,
+    });
+  }
+
   #createAccessToken(user: User): string {
-    return this.jwtService.sign(
-      {
-        email: user.email,
-        uuid: user.uuid,
-      },
-      {
-        expiresIn: UsersService.ACCESS_TOKEN_TTL,
-      },
-    );
+    const payload: JwtType = {
+      email: user.email,
+      uuid: user.uuid,
+    };
+
+    return this.jwtService.sign(payload, {
+      expiresIn: UsersService.ACCESS_TOKEN_TTL,
+    });
   }
 
   #createRefreshToken(user: User): string {
-    return this.jwtService.sign(
-      {
-        email: user.email,
-        uuid: user.uuid,
-      },
-      {
-        expiresIn: UsersService.REFRESH_TOKEN_TTL,
-      },
-    );
+    const payload: JwtType = {
+      email: user.email,
+      uuid: user.uuid,
+    };
+
+    return this.jwtService.sign(payload, {
+      expiresIn: UsersService.REFRESH_TOKEN_TTL,
+    });
   }
 }
