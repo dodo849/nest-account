@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import { ApiErrorResponse } from '../common/types/api-response.type';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -21,14 +22,29 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const responseBody = {
-      statusCode: httpStatus,
-      timestamp: new Date().toISOString(),
-      path: httpAdapter.getRequestUrl(ctx.getRequest()) as string,
-      reason: this.#extractErrorReason(exception),
+    const responseBody: ApiErrorResponse = {
+      success: false,
+      error: {
+        code: this.#getErrorCode(httpStatus),
+        message: this.#extractErrorReason(exception) || 'Internal Server Error',
+      },
     };
 
     httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
+  }
+
+  #getErrorCode(httpStatus: number): string {
+    const statusCodeMap: Record<number, string> = {
+      400: 'BAD_REQUEST',
+      401: 'UNAUTHORIZED',
+      403: 'FORBIDDEN',
+      404: 'NOT_FOUND',
+      409: 'CONFLICT',
+      422: 'UNPROCESSABLE_ENTITY',
+      500: 'INTERNAL_SERVER_ERROR',
+    };
+
+    return statusCodeMap[httpStatus] || 'UNKNOWN_ERROR';
   }
 
   #extractErrorReason(exception: unknown): string | null {
@@ -43,8 +59,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       response !== null &&
       'message' in response
     ) {
-      const message = (response as { message: string[] }).message;
-      return Array.isArray(message) ? message.join(', ') : null;
+      const message = (response as { message: string | string[] }).message;
+      return Array.isArray(message) ? message.join(', ') : message;
     }
 
     return typeof response === 'string' ? response : exception.message;

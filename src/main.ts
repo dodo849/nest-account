@@ -2,7 +2,7 @@ import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { GlobalExceptionFilter } from './filters/GlobalExceptionFilter';
+import { GlobalExceptionFilter } from './filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -38,10 +38,10 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 3000);
 
   console.log(
-    `🚀 Application is running on: http://localhost:${process.env.PORT ?? 3000}`,
+    `-- Application is running on: http://localhost:${process.env.PORT ?? 3000}`,
   );
   console.log(
-    `📚 Swagger UI: http://localhost:${process.env.PORT ?? 3000}/api`,
+    `-- Swagger UI: http://localhost:${process.env.PORT ?? 3000}/api`,
   );
 }
 bootstrap();

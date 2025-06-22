@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEmail, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsEmail, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
@@ -27,6 +27,5 @@ export class CreateUserDto {
     minLength: 6,
   })
   @IsNotEmpty({ message: '비밀번호는 필수입니다.' })
-  @MinLength(6, { message: '비밀번호는 최소 6자 이상이어야 합니다.' })
   password: string;
 }
