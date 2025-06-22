@@ -1,29 +1,45 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersRepository } from './users.repository';
+import * as bcrypt from 'bcrypt';
+import { LoginDto } from './dto/login.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
-  create(dto: CreateUserDto) {
-    return this.usersRepository.createUser(dto.name, dto.email, dto.password);
+  async create(dto: CreateUserDto): Promise<User> {
+    if (dto.password.length < 12) {
+      throw new BadRequestException('비밀번호는 12자리 이상이어야 합니다');
+    }
+
+    const hashPassword = await bcrypt.hash(dto.password, 10);
+
+    return await this.usersRepository.create(dto.name, dto.email, hashPassword);
   }
 
-  findAll() {
-    return `This action returns all users`;
-  }
+  async login(dto: LoginDto): Promise<User> {
+    const findUser = await this.usersRepository.findByEmail(dto.email);
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+    if (!findUser) {
+      throw new NotFoundException('사용자를 찾을 수 없음');
+    }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+    const isPasswordValid = await bcrypt.compare(
+      dto.password,
+      findUser.password,
+    );
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('비밀번호가 틀림');
+    }
+
+    return findUser;
   }
 }

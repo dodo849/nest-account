@@ -1,0 +1,17 @@
+services:
+  postgres-nest:
+    image: postgres:15.8-alpine
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+        reservations:
+          cpus: '0.05'
+    container_name: postgres-nest
+    restart: always
+    environment:
+      POSTGRES_USER: nest_user
+      POSTGRES_PASSWORD: nest@user
+      POSTGRES_DB: nest_db
+    ports:
+      - "5432:5432"
